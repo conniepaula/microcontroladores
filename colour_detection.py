@@ -20,6 +20,10 @@ while True:
    
     cv2.imshow('frame', result)
 
+    contours,_ = findContours(mask, RETR_TREE, CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        x,y, width, height = boundingRect(contour)
+        
     if cv2.waitKey(1) == ord('q'):
         break
 
