@@ -7,7 +7,8 @@ PORT = 8080
 async def listen():
     url = "ws://localhost:" + str(PORT)
     async with websockets.connect(url) as ws:
-        await ws.send("Hello Server")
+        sendMessage = input("Enter a message to send: ")
+        await ws.send(sendMessage)
         while True:
             message = await ws.recv()
             print(message)
