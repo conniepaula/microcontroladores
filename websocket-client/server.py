@@ -7,7 +7,7 @@ print("Server listening on port ", str(PORT))
 
 
 async def echo(websocket, path):
-    print("A client has connected.")
+    print("A client has connected. ")
     try:
         async for message in websocket:
             print("Received message: ", message)
