@@ -4,7 +4,7 @@ import asyncio
 import threading
 import numpy as np
 from time import sleep
-# from pyzbar.pyzbar import decode
+from pyzbar.pyzbar import decode
 from pytesseract import pytesseract
 
 PORT = 8080
@@ -96,34 +96,32 @@ def colour_detection(imagem, cap):
 
 
 def qrcode_detection(frame):
-    print("oi")
-    # for barcode in decode(img):
-    #     # should print the data of the barcode (or barcodes in case there are more than one in img)
-    #     data = barcode.data.decode('utf-8')
-    #     print(data)
-    #     points = np.array([barcode.polygon], np.int32)
-    #     points = points.reshape((-1, 1, 2))
-    #     cv2.polylines(frame, [points], True, (0, 255, 0), 5)
-    #     points2 = barcode.rect
-    #     cv2.putText(frame, data, (points2[0], points2[1]),
-    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
-    # cv2.imshow('result', frame)
+    for barcode in decode(frame):
+        # should print the data of the barcode (or barcodes in case there are more than one in img)
+        data = barcode.data.decode('utf-8')
+        print(data)
+        points = np.array([barcode.polygon], np.int32)
+        points = points.reshape((-1, 1, 2))
+        cv2.polylines(frame, [points], True, (0, 255, 0), 5)
+        points2 = barcode.rect
+        cv2.putText(frame, data, (points2[0], points2[1]),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+    cv2.imshow('result', frame)
 
 
 while True:
     ret, frame = cap.read()
+    cv2.imshow('frame', frame)
 
     if detect_colour == True:
         colour_detection(frame, cap)
         detect_colour = False
     if detect_qrcode == True:
         qrcode_detection(frame)
-        detect_qrcode = False
     if detect_text == True:
         text_detection(frame)
         detect_text = False
 
-    cv2.imshow('frame', frame)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
