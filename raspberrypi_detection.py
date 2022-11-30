@@ -1,11 +1,35 @@
 import cv2
+import websockets
+import asyncio
 import threading
 import numpy as np
 from pyzbar.pyzbar import decode
 from pytesseract import pytesseract
 
+PORT = 8080
 
 cap = cv2.VideoCapture(0)
+
+
+async def server(websocket, path):
+    print("A client has connected. ")
+    try:
+        async for message in websocket:
+            print("Received message: ", message)
+            if "velocidade" in message:
+                velocidade = message.split(" ")[1]
+                print(velocidade)
+            if "direcao" in message:
+                direcao = message.split(" ")[1]
+                print(direcao)
+            sendMessage = input("Enter a message to send: ")
+            await websocket.send(sendMessage)
+    except websockets.exceptions.ConnectionClosed as e:
+        print("Client disconnected.")
+        print(e)
+
+x = threading.Thread(target=server, args=(1))
+x.start()
 
 
 def text_detection():
@@ -85,3 +109,8 @@ def qrcode_detection():
 
 cap.release()
 cv2.destroyAllWindows()
+
+server = websockets.serve(server, "localhost", PORT)
+
+asyncio.get_event_loop().run_until_complete(server)
+asyncio.get_event_loop().run_forever()
