@@ -54,8 +54,8 @@ x.start()
 
 def text_detection(frame):
     words_in_image_2 = pytesseract.image_to_string(frame)
-    print(words_in_image_2)
-    return words_in_image_2
+    result = "Texto: " + words_in_image_2
+    return result
 
 
 def colour_detection(imagem, cap):
@@ -100,6 +100,7 @@ def qrcode_detection(frame):
         # should print the data of the barcode (or barcodes in case there are more than one in img)
         data = barcode.data.decode('utf-8')
         print(data)
+        result = "QR: " + data
         points = np.array([barcode.polygon], np.int32)
         points = points.reshape((-1, 1, 2))
         cv2.polylines(frame, [points], True, (0, 255, 0), 5)
@@ -107,6 +108,7 @@ def qrcode_detection(frame):
         cv2.putText(frame, data, (points2[0], points2[1]),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
     cv2.imshow('result', frame)
+    return result
 
 
 while True:
