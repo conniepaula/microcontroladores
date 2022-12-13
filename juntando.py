@@ -65,11 +65,22 @@ def colour_detection(imagem, cap):
 
     # convert colours to HSV
     hsv = cv2.cvtColor(imagem, cv2.COLOR_BGR2HSV)
+
     # we now pick a lower and an upper bound to the colours that we want to extract from the image
-    lower_orange = np.array([0, 60, 60])
-    upper_orange = np.array([20, 255, 255])
+    lower_red = np.array([255, 132, 132])
+    upper_red = np.array([255, 0, 0])
+
+    lower_blue = np.array([153, 204, 255])
+    upper_blue = np.array([0, 0, 255])
+
+    lower_green = np.array([153, 255, 153])
+    upper_green = np.array([0, 255, 0])
+
     # Mask returns part of an image that only has the orange pixels existing
-    mask = cv2.inRange(hsv, lower_orange, upper_orange)
+    red_mask = cv2.inRange(hsv, lower_red, upper_red)
+    blue_mask = cv2.inRange(hsv, lower_blue, upper_blue)
+    green_mask = cv2.inRange(hsv, lower_green, upper_green)
+    mask = red_mask + blue_mask + green_mask
     # Compare mask and image pixel by pixel and turn all pixels that are not blue to black
     result = cv2.bitwise_and(imagem, imagem, mask=mask)
     # cv2.imshow('imagem', result)
