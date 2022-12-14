@@ -1,11 +1,11 @@
 from time import sleep
 from datetime import datetime, timedelta
-from gpiozero import Motor
+from gpiozero import Motor, LED
 import RPi.GPIO as GPIO
 import websockets
 import asyncio
 import cv2
-import threading
+from threading import Timer, Thread
 import numpy as np
 from pyzbar.pyzbar import decode
 from pytesseract import pytesseract
@@ -17,6 +17,62 @@ cap = cv2.VideoCapture(0)
 detect_text = False
 detect_qrcode = False
 detect_colour = False
+
+led = LED(25)
+
+codigo_morse = {'a': '.- ',
+                'b': '-... ',
+                'c': '-.-. ',
+                'd': '-.. ',
+                'e': '. ',
+                'f': '..-. ',
+                'g': '--. ',
+                'h': '.... ',
+                'i': '.. ',
+                'j': '.--- ',
+                'k': '-.- ',
+                'l': '.-.. ',
+                'm': '-- ',
+                'n': '-. ',
+                'o': '--- ',
+                'p': '.--. ',
+                'q': '--.- ',
+                'r': '.-. ',
+                's': '... ',
+                't': '- ',
+                'u': '..- ',
+                'v': '...- ',
+                'w': '.-- ',
+                'x': '-..- ',
+                'y': '-.-- ',
+                'z': '--.. ',
+                }
+
+indice = 0
+palavra = input("Digite a palavra para ser transformada em codigo morse: ")
+palavra_morse = ""
+
+
+def pisca_morse():
+    global indice
+    if palavra_morse[indice] == ".":
+        led.blink(n=1, on_time=0.150, off_time=0)
+    elif palavra_morse[indice] == '-':
+        led.blink(n=1, on_time=0.55, off_time=0)
+    else:
+        led.blink(n=1, on_time=0, off_time=0.7)
+    indice += 1
+    if indice < len(palavra):
+        timer = Timer(1, pisca_morse)
+        timer.start()
+
+
+for letra in palavra:
+    palavra_morse += codigo_morse[letra]
+    print("palavra ate agora: ", palavra_morse)
+
+timer = Timer(1, pisca_morse)
+timer.start()
 
 r = 3.47  # raio das rodas em centimetros
 vMax = 140
@@ -34,12 +90,24 @@ vDir = 0
 porcent_rec_Dir = 0
 porcent_cor_Dir = porcent_rec_Dir
 
-
+contMensIni = datetime.now()
+contMensFin = contMensIni
 def servidor():
+    
+   # global contMensIni, contMensFin
+   # contMensDelta = (contMensFin - contMensIni)
+   # print(contMensDelta)
+   # if contMensDelta.total_seconds() >= 4:
+   #     await websocket.send("Velocidade do motor esquerdo: ")
+   #     await websocket.send("Velocidade do motor direito: ")
+   #     print("velocidade enviada")
+   #     contMensIni = datetime.now()
+        
     async def echo(websocket, path):
-        print("A client has connected.")
+        print("A client has connected.")  
         try:
             async for message in websocket:
+                
                 print("Received message: " + message)
                 if message == "para":
                     defineVel(0, "esq")
@@ -64,6 +132,7 @@ def servidor():
                     defineVel(vel_esq, "esq")
                     defineVel(vel_dir, "dir")
                 await websocket.send(message)
+                    
         except websockets.exceptions.ConnectionClosed as e:
             print("Client disconnected.")
             print(e)
@@ -78,7 +147,7 @@ def servidor():
     loop.run_forever()
 
 
-x = threading.Thread(target=servidor)
+x = Thread(target=servidor)
 x.start()
 
 
@@ -221,6 +290,7 @@ def colour_detection(imagem, cap):
 
 
 def qrcode_detection(frame):
+    result = ''
     for barcode in decode(frame):
         # should print the data of the barcode (or barcodes in case there are more than one in img)
         data = barcode.data.decode('utf-8')
@@ -241,21 +311,28 @@ GPIO.add_event_callback(encEsq, ticsEsq)
 
 iTeste = datetime.now()
 fTeste = datetime.now()
+
 deltaTeste = fTeste - iTeste
 
 
 while True:
+    contMensFin = datetime.now()
     ret, frame = cap.read()
-    cv2.imshow('frame', frame)
+    
+    width = int(cap.get(3))
+    height = int(cap.get(4))
+    if width > 0 and height > 0:# and frame != None:
+        cv2.imshow('frame', frame)
+        detect_qrcode = True
 
-    if detect_colour == True:
-        colour_detection(frame, cap)
-        detect_colour = False
-    if detect_qrcode == True:
-        qrcode_detection(frame)
-    if detect_text == True:
-        text_detection(frame)
-        detect_text = False
+        if detect_colour == True:
+            colour_detection(frame, cap)
+            detect_colour = False
+        if detect_qrcode == True:
+            qrcode_detection(frame)
+        if detect_text == True:
+            text_detection(frame)
+            detect_text = False
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
